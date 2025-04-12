@@ -1,0 +1,27 @@
+[project]
+name = "cs6478-final-project"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Your Name", email = "you@example.com" }
+]
+readme = "README.md"
+requires-python = "3.8.8"
+dependencies = [
+    "h5py==3.5.0",
+    "numpy==1.21.2",
+    "scipy==1.7.1",
+    "setuptools==58.0.4",
+    # "tensorflow-gpu==2.5.0",
+    "cython==0.29.24",
+    "torch==1.10.0",         # PyPI package for PyTorch
+    "torchvision==0.11.1",
+    "scikit-learn==1.0.1",
+    "opencv-python==4.5.4.58",
+    "skorch==0.11.0",
+    "ipykernel (>=6.29.5,<7.0.0)"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
