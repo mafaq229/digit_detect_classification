@@ -1,13 +1,9 @@
 import os
-import tarfile
 import random
 import h5py
 from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
-from torch.utils.data import Dataset, DataLoader
-
-
 
 
 
@@ -138,48 +134,6 @@ def organize_svhn_dataset(root_dir, digit_struct_mat, output_dir, num_bg_per_ima
         num_samples = len(list((output_dir / str(i)).glob("*.png")))
         print(f"Class {i}: {num_samples} samples")
 
-
-class SVHNFull(Dataset):
-    """
-    PyTorch Dataset class for the organized SVHN dataset.
-    This class reads from the organized dataset structure where images are stored in
-    class-specific folders (0-9 for digits, 10 for background).
-    
-    Args:
-        root_dir (str): Path to the organized dataset directory
-        transform (callable, optional): Optional transform to be applied on a sample
-    """
-    def __init__(self, root_dir, transform=None):
-        self.root_dir = Path(root_dir)
-        self.transform = transform
-        
-        # Collect all samples
-        self.samples = []
-        for class_dir in sorted(self.root_dir.iterdir()):
-            if not class_dir.is_dir():
-                continue
-                
-            class_label = int(class_dir.name)
-            for img_path in class_dir.glob("*.png"):
-                self.samples.append((img_path, class_label))
-        
-        print(f"Loaded {len(self.samples)} samples from {self.root_dir}")
-        print("Class distribution:")
-        for i in range(11):
-            num_samples = sum(1 for _, lbl in self.samples if lbl == i)
-            print(f"Class {i}: {num_samples} samples")
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-        img_path, label = self.samples[idx]
-        img = Image.open(img_path).convert('RGB')
-        
-        if self.transform:
-            img = self.transform(img)
-            
-        return img, label
     
 if __name__ == "__main__":
     organize_svhn_dataset("data/train", "data/train/digitStruct.mat", "artifacts/data/train")
