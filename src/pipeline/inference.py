@@ -7,7 +7,8 @@ import torch.nn.functional as F
 from PIL import Image
 
 from src.components.mesr import MESR
-from src.components.models import VGG16FineTune, inference_transform
+from src.components.models import VGG16FineTune
+from src.components.dataloader import test_transform
 from src.utils import get_roi_images
 
 
@@ -16,7 +17,7 @@ class Inference:
         self.mesr = MESR()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_path = "artifacts/models/vgg16_svhn_full_11cls_6_epoch.pth"
-        self.transform = inference_transform
+        self.transform = test_transform
     
     def get_rois(self, image):
         """Get the ROIs from the image"""

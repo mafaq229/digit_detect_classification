@@ -7,7 +7,7 @@ from torchvision import transforms
 import random
 
 
-class SVHNFull(Dataset):
+class SVHN(Dataset):
     """
     PyTorch Dataset class for the organized SVHN dataset.
     This class reads from the organized dataset structure where images are stored in
@@ -50,7 +50,6 @@ class SVHNFull(Dataset):
         return img, label
 
 
-
 class RandomGaussianNoise:
     """
     Add random gaussian noise to the image.
@@ -68,7 +67,7 @@ class RandomGaussianNoise:
             return tensor
             
         # Generate noise
-        noise = torch.randn(tensor.size()) * self.std
+        noise = torch.randn_like(tensor) * self.std
         # Apply noise and clamp to valid range
         return torch.clamp(tensor + noise, 0., 1.)
     
@@ -90,7 +89,11 @@ class RandomScale:
         return self.__class__.__name__ + '(scale_range={0})'.format(self.scale_range)
 
 
+# Training transforms with augmentation
 train_transform = transforms.Compose([
+    # First ensure minimum size for cropping
+    transforms.Resize(40),  # Resize to 40x40 to allow for cropping and scaling
+    # Then apply augmentations
     RandomScale(scale_range=(0.7, 1.3)),
     transforms.RandomCrop(32, padding=4),
     transforms.RandomRotation(30),
@@ -103,11 +106,10 @@ train_transform = transforms.Compose([
     ),
     transforms.RandomAdjustSharpness(sharpness_factor=2),
     transforms.RandomAutocontrast(),
-    RandomGaussianNoise(std=0.05, prob=0.05),  # Apply to 5% of images
-    
-    # Standard transforms
-    transforms.Resize((32, 32)),
+    # Convert to tensor and apply noise
     transforms.ToTensor(),
+    RandomGaussianNoise(std=0.05, prob=0.2),
+    # Normalize
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
