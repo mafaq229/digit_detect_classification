@@ -1,17 +1,26 @@
-import pickle
-from torch.utils.data import DataLoader
-from preprocess import SVHNDataset, transform
+import cv2
 
 
-def load_dataloader_from_artifact(artifact_path, batch_size=None, shuffle=None):
-    """Load a dataloader from a saved artifact."""
-    with open(artifact_path, 'rb') as f:
-        metadata = pickle.load(f)
+def get_roi_images(image, boxes, target_size=(32, 32)):
+    """
+    Extracts and optionally resizes regions of interest (digit ROIs) from the image.
     
-    # Override batch_size and shuffle if provided
-    batch_size = batch_size if batch_size is not None else metadata['batch_size']
-    shuffle = shuffle if shuffle is not None else metadata['shuffle']
+    Args:
+        image (np.array): The original image.
+        boxes (np.array): Array of bounding boxes [x1, y1, x2, y2].
+        target_size (tuple): The size to which each ROI is resized.
     
-    dataset = SVHNDataset(metadata['images'], metadata['labels'], transform=transform)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+    Returns:
+        List of ROI images.
+    """
+    rois = []
+    for (x1, y1, x2, y2) in boxes:
+        roi = image[y1:y2, x1:x2]
+        # Optionally, convert to grayscale
+        # if len(roi.shape) == 3:
+        #     roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        # Resize ROI to the target size (e.g., what the classifier expects)
+        roi = cv2.resize(roi, target_size)
+        rois.append(roi)
+    return rois
 

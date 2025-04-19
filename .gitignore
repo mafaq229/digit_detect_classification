@@ -1,2 +1,7 @@
 data/
 dev/
+*.pyc
+images/
+graded_images/
+artifacts/
+venv/
