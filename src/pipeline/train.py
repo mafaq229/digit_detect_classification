@@ -8,27 +8,69 @@ import os
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+from torch.cuda import Stream
 
 from src.components.dataloader import SVHN, train_transform, test_transform
 from src.components.models import SimpleCNN, MediumCNN, ComplexCNN, DenseNet, VGG16FineTune
+
+class PrefetchDataLoader:
+    """DataLoader wrapper that prefetches data to GPU"""
+    def __init__(self, dataloader):
+        self.dataloader = dataloader
+        self.stream = Stream()
+        
+    def __iter__(self):
+        for batch in self.dataloader:
+            with torch.cuda.stream(self.stream):
+                batch = [item.cuda(non_blocking=True) for item in batch]
+            yield batch
+    
+    def __len__(self):
+        return len(self.dataloader)
+
 
 class ModelTrainer:
     def __init__(self, model):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = model.to(self.device)
         
+        # Enable DataParallel if multiple GPUs are available
+        if torch.cuda.device_count() > 1:
+            print(f"Using {torch.cuda.device_count()} GPUs!")
+            self.model = nn.DataParallel(self.model)
+        
     def get_dataloaders(self, batch_size=64, val_split=0.1):
         # Load full training dataset
-        full_dataset = SVHN(root_dir="artifacts/data/train", transform=train_transform)
+        full_dataset = SVHN(root_dir="artifacts/data/train", transform=train_transform, cache_size=10000)
         
         # Split into train and validation
         val_size = int(len(full_dataset) * val_split)
         train_size = len(full_dataset) - val_size
         train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
         
-        # Create dataloaders
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+        # Create dataloaders with optimized settings
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,  # Use multiple workers
+            pin_memory=True,  # Enable pinned memory
+            persistent_workers=True,  # Keep workers alive
+            prefetch_factor=2  # Prefetch batches
+        )
+        
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=2,
+            pin_memory=True
+        )
+        
+        # Wrap with prefetch loader if using CUDA
+        if self.device == "cuda":
+            train_loader = PrefetchDataLoader(train_loader)
+            val_loader = PrefetchDataLoader(val_loader)
         
         return train_loader, val_loader
         
@@ -39,9 +81,22 @@ class ModelTrainer:
         Returns:
             dict: Dictionary containing test metrics
         """
-        # Load test dataset
-        test_dataset = SVHN(root_dir="artifacts/data/test", transform=test_transform)
-        test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+        # Load test dataset with caching
+        test_dataset = SVHN(root_dir="artifacts/data/test", transform=test_transform, cache_size=1000)
+        
+        # Create test loader with optimized settings
+        test_loader = DataLoader(
+            test_dataset,
+            batch_size=64,
+            shuffle=False,
+            num_workers=2,
+            pin_memory=True,
+            persistent_workers=True
+        )
+        
+        # Wrap with prefetch loader if using CUDA
+        if self.device == "cuda":
+            test_loader = PrefetchDataLoader(test_loader)
         
         self.model.eval()
         test_loss = 0.0
@@ -55,7 +110,7 @@ class ModelTrainer:
         
         with torch.no_grad():
             for images, labels in tqdm(test_loader, desc="Testing"):
-                images, labels = images.to(self.device), labels.to(self.device)
+                # Images and labels are already on the correct device due to PrefetchDataLoader
                 outputs = self.model(images)
                 loss = criterion(outputs, labels)
                 
@@ -229,9 +284,9 @@ if __name__ == "__main__":
     # Example usage with different models
     models = {
         # 'SimpleCNN': SimpleCNN(),
-        'MediumCNN': MediumCNN(),
-        # 'ComplexCNN': ComplexCNN(),
-        # 'DenseNet': DenseNet(),
+        # 'MediumCNN': MediumCNN(),
+        'ComplexCNN': ComplexCNN(),
+        'DenseNet': DenseNet(),
         # 'VGG16FineTune': VGG16FineTune()
     }
     

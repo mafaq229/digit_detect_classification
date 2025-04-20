@@ -2,7 +2,7 @@ from pathlib import Path
 from PIL import Image
 import torch
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms
 import random
 
@@ -16,10 +16,13 @@ class SVHN(Dataset):
     Args:
         root_dir (str): Path to the organized dataset directory
         transform (callable, optional): Optional transform to be applied on a sample
+        cache_size (int): Number of images to keep in memory cache
     """
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, transform=None, cache_size=10000):
         self.root_dir = Path(root_dir)
         self.transform = transform
+        self.cache_size = cache_size
+        self.cache = {}
         
         # Collect all samples
         self.samples = []
@@ -42,7 +45,15 @@ class SVHN(Dataset):
 
     def __getitem__(self, idx):
         img_path, label = self.samples[idx]
-        img = Image.open(img_path).convert('RGB')
+        
+        # Check cache first
+        if img_path in self.cache:
+            img = self.cache[img_path]
+        else:
+            img = Image.open(img_path).convert('RGB')
+            # Add to cache if not full
+            if len(self.cache) < self.cache_size:
+                self.cache[img_path] = img
         
         if self.transform:
             img = self.transform(img)
