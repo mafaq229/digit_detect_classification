@@ -32,17 +32,17 @@ def process_image(inference, image_path, output_path):
         conf = confidences[idx]
         pred = predictions[idx]
         cv2.putText(vis_image, f"{pred}({conf:.2f})", (int(x1), int(y1)-10), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.25, (0, 255, 0), 1)
     
     # Add the detected sequence as text
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(vis_image, f"Detected: {sequence}", (10, 30), font, 1, (0, 255, 0), 2)
+    cv2.putText(vis_image, f"Detected: {sequence}", (10, 15), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
     
     # Save the result
     cv2.imwrite(output_path, vis_image)
     print(f"Processed {image_path} -> {output_path}")
     print(f"Detected sequence: {sequence}")
-    print(f"Individual predictions: {list(zip(predictions, confidences))}")
+    # print(f"Individual predictions: {list(zip(predictions, confidences))}")
 
 def main():
     # Create output directory

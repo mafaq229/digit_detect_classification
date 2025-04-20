@@ -5,7 +5,7 @@ import cv2
 
 
 class MESR:
-    def __init__(self, min_area=80, max_area=2000):
+    def __init__(self, min_area=80, max_area=5000):
         """Initialize MESR with parameters
         
         Default parameters to MSER_create are:
@@ -37,7 +37,7 @@ class MESR:
         bilateral_gray = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
         return bilateral_gray
     
-    def filter_regions(self, boxes, aspect_ratio_thresholds=(0.2, 1.2)):
+    def filter_regions(self, boxes, aspect_ratio_thresholds=(0.2, 2)):
         """Filter regions based on aspect ratio and apply non-maximum suppression
         
         Args:

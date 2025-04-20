@@ -16,7 +16,7 @@ class Inference:
     def __init__(self):
         self.mesr = MESR()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model_path = "artifacts/models/vgg16_svhn_full_11cls_6_epoch.pth"
+        self.model_path = "best_model.pth"
         self.transform = test_transform
     
     def get_rois(self, image):
@@ -76,7 +76,7 @@ class Inference:
             return ""
             
         # Discard predictions with low confidence
-        confidence_threshold = 0.7
+        confidence_threshold = 0.9
         high_conf_mask = confidences >= confidence_threshold
         predictions = predictions[high_conf_mask]
         confidences = confidences[high_conf_mask]

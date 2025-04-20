@@ -82,7 +82,7 @@ class ModelTrainer:
             dict: Dictionary containing test metrics
         """
         # Load test dataset with caching
-        test_dataset = SVHN(root_dir="artifacts/data/test", transform=test_transform, cache_size=1000)
+        test_dataset = SVHN(root_dir="artifacts/data/test", transform=test_transform, cache_size=10000)
         
         # Create test loader with optimized settings
         test_loader = DataLoader(
