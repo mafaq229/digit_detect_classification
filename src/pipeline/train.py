@@ -283,10 +283,10 @@ class ModelTrainer:
 if __name__ == "__main__":
     # Example usage with different models
     models = {
-        # 'SimpleCNN': SimpleCNN(),
+        'SimpleCNN': SimpleCNN(),
         # 'MediumCNN': MediumCNN(),
-        'ComplexCNN': ComplexCNN(),
-        'DenseNet': DenseNet(),
+        # 'ComplexCNN': ComplexCNN(),
+        # 'DenseNet': DenseNet(),
         # 'VGG16FineTune': VGG16FineTune()
     }
     

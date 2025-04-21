@@ -5,6 +5,3 @@ graded_images/
 artifacts/
 venv/
 .venv/
-pyproject.toml
-uv.lock
-.python-version
